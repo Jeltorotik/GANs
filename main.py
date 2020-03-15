@@ -21,21 +21,21 @@ transform=transforms.Compose([
 	# Normalize здесь приводит значения в промежуток [-1, 1]
 ])
 
-dataset = datasets.CelebA('data', download=True, transform=transform)
+dataset = datasets.CelebA('data', download=False, transform=transform)
 
 
 
 # Gan initialization:
 
-gan = mygan.GAN(*init_gan_architecture())
+gan = mygan.GAN(*init_gan_architecture(), cuda=True)
 
-gan.download_params(params_path)
+#gan.download_params(params_path)
 
-gan.sample_and_plot(16)
+#gan.sample_and_plot(4)
 
-#gan.add_dataset(dataset, batch_size=batch_size)
+gan.add_dataset(dataset, batch_size=batch_size)
 
-#gan.train(saving=True)
+gan.train(saving=True)
 
 
 
