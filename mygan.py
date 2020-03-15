@@ -10,7 +10,6 @@ from time import time
 import datetime
 
 
-
 def to_numpy_image(img):
 	return img.detach().cpu().view(*img.shape).transpose(0, 1).transpose(1, 2).numpy()
 
@@ -28,7 +27,13 @@ class GAN:
 	def __init__(self, D, G, cuda=False):
 		if cuda:
 			self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-			print(self.device)
+			
+		else:
+			self.device = torch.device("cpu")
+		print(self.device)
+		# model
+		self.G = G.to(self.device)
+		self.D = D.to(self.device)
 
 		#stats and logs
 		self.epoch = 0
@@ -37,15 +42,15 @@ class GAN:
 		self.D_losses = []
 
 		# hyperparameters
+
 		D_learning_rate = 1e-4
 		G_learning_rate = 1e-4
 
 		# loss
 		self.criterion = nn.BCELoss()
 
-		# model
-		self.G = G.to(self.device)
-		self.D = D.to(self.device)
+
+		self.latent_size = next(self.G.parameters()).size()[0]
 		self.optim_G = torch.optim.Adam(self.G.parameters(), lr = D_learning_rate)
 		self.optim_D = torch.optim.Adam(self.D.parameters(), lr = G_learning_rate)
 
@@ -73,7 +78,6 @@ class GAN:
 
 
 	def save_params(self, path):
-		############ TODO
 		self.training_time += time() - self.start_time
 		self.start_time = time()
 
@@ -104,28 +108,29 @@ class GAN:
 		
 		f, axarr = plt.subplots(side, side, figsize=(10,10))
 		for i in range(n):
-			img = to_numpy_image(n) * 255
+			img = to_numpy_image(generated[i]) * 255
 			axarr[i//side,i%side].imshow(img.astype(np.uint8))
-			axarr[i//side,i%side].axis('off')    
+			axarr[i//side,i%side].axis('off')  
+			plt.pause(0.1)  
 		f.show()
 
 
-	def add_data(self, dataset, batch_size):
+	def add_dataset(self, dataset, batch_size):
 		self.loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
 
 	def train(self, saving=False, D_speed=5, G_speed=1):
 		self.start_time = time()
-		self.sample_and_plot()
+		self.sample_and_plot(4)
 
-		y_zeros = torch.zeros(batch_size).to(self.device)
-		y_ones = (torch.ones(batch_size)*0.93).to(self.device)
+
 		while True:
 			for iters, (data, _) in enumerate(self.loader, 1): # TODO
 
 				batch_size = len(data)
-
-				data += torch.randn(batch_size)/10
+				y_zeros = torch.zeros(batch_size).to(self.device)
+				y_ones = (torch.ones(batch_size)*0.93).to(self.device)
+				data += torch.randn(data.size())/10
 				data = data.to(self.device)
 
 

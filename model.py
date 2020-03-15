@@ -54,7 +54,7 @@ def init_gan_architecture(latent_size=100, base_size=64, num_channels=3):
         nn.Conv2d(base_size*16, 1, 6, 4, 1, bias=False),
         nn.Sigmoid()
     )
-    return G, D, latent_size
+    return D, G
 
 
 if __name__ == '__main__':
